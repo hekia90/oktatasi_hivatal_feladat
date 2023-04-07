@@ -1,0 +1,21 @@
+{
+    "name": "hekia/oktatasi_hivatal_feladat",
+    "description": "Oktatási hivatala - Házi feladata",
+    "type": "project",
+    "license": "proprietary",
+    "autoload": {
+        "psr-4": {
+            "Hekia\\SimplifiedScoreCalculator\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Budai Krisztián",
+            "email": "hekia90@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "phpunit/phpunit": "^10.0"
+    }
+}
