@@ -3,14 +3,14 @@
 namespace Hekia\SimplifiedScoreCalculator;
 
 use Hekia\SimplifiedScoreCalculator\StudentBuilderException;
-use Hekia\SimplifiedScoreCalculator\Student\ExtraPoint;
-use Hekia\SimplifiedScoreCalculator\Student\ExtraPointCollection;
 use Hekia\SimplifiedScoreCalculator\Student\ExtraPointParameter\LanguageExamSubject;
 use Hekia\SimplifiedScoreCalculator\Student\ExtraPointParameter\LanguageExamType;
+use Hekia\SimplifiedScoreCalculator\Student\ExtraPointInterface;
 use Hekia\SimplifiedScoreCalculator\Student\ExtraPointCategory;
-use Hekia\SimplifiedScoreCalculator\Student\ExtraPointParameterName;
+use Hekia\SimplifiedScoreCalculator\Student\ExtraPoint\LanguageExamExtraPoint;
 use Hekia\SimplifiedScoreCalculator\Student\GraduationResult;
 use Hekia\SimplifiedScoreCalculator\Student\GraduationResultCollection;
+use Hekia\SimplifiedScoreCalculator\Student\LanguageExamExtraPointCollection;
 
 class StudentBuilder
 {
@@ -21,31 +21,29 @@ class StudentBuilder
         $this->schools = $schools;
     }
 
-    private function buildExtraPointParameters(ExtraPointCategory $extraPointCategory, array $parameters): array
-    {
+    private function buildExtraPointObject(
+        ExtraPointCategory $extraPointCategory,
+        array $parameters
+    ): ExtraPointInterface {
         if ($extraPointCategory->isLanguageExam()) {
-            return [
-                ExtraPointParameterName::LANGUAGE_EXAM_SUBJECT->value
-                                => LanguageExamSubject::from($parameters['nyelv']),
-                ExtraPointParameterName::LANGUAGE_EXAM_TYPE->value
-                                => LanguageExamType::from($parameters['tipus'])
-            ];
+            return new LanguageExamExtraPoint(
+                $extraPointCategory,
+                LanguageExamSubject::from($parameters['nyelv']),
+                LanguageExamType::from($parameters['tipus'])
+            );
         }
 
         return [];
     }
 
-    private function buildExtraPointCollection(array $datas): ExtraPointCollection
+    private function buildLanguageExamExtraPointCollection(array $datas): LanguageExamExtraPointCollection
     {
         $datasExtraPoints = $this->getDataValue($datas, 'tobbletpontok.*.kategoria|nyelv|tipus');
 
-        $collection = new ExtraPointCollection();
+        $collection = new LanguageExamExtraPointCollection();
         foreach ($datasExtraPoints as $data) {
             $extraPointCategory = ExtraPointCategory::from($data['kategoria']);
-            $collection[] = new ExtraPoint(
-                $extraPointCategory,
-                $this->buildExtraPointParameters($extraPointCategory, $data)
-            );
+            $collection[] = $this->buildExtraPointObject($extraPointCategory, $data);
         }
 
         return $collection;
@@ -135,13 +133,13 @@ class StudentBuilder
 
             return $dataUniversityName === $school->getName()
                     && $dataFaculty === $school->getFaculty()
-                    && $dataCurse === $school->getSchoolCurse()->getName();
+                    && $dataCurse === $school->getCurse()->getName();
         });
 
         return new Student(
             $selectedSchool,
             $this->buildGraduationResultCollection($datas),
-            $this->buildExtraPointCollection($datas)
+            $this->buildLanguageExamExtraPointCollection($datas)
         );
     }
 }
